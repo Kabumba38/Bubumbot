@@ -2,7 +2,7 @@ import face_recognition
 import pyttsx3
 import cv2
 import numpy as np
-import pyautogui
+#import pyautogui
 import time
 
 
@@ -111,21 +111,27 @@ while True:
         engine.say("О, я вас не знаю, как вас зовут")
         engine.runAndWait()
         nameNew = input("Введите имя:")
-        while i < len(known_face_names):
-            if nameNew==known_face_names[i]:
+        i=0
+        len_names=len(known_face_names)
+        for i in known_face_names:
+            if i==nameNew:
                 seconds=time.time()
-                nameNew=nameNew+str(seconds)
+                nameNew=nameNew+"|"+str(seconds)
         f = open('base.txt', 'a')
         f.write(nameNew + "\n")
         f.close()
         known_face_names.append(nameNew)
         name2=nameNew+".jpg"
-        engine.say("Мне нужно вас сфотографировать, разместите лицо поцентру экрана и постарайтесь не двигаться")
+        engine.say("Мне нужно вас сфотографировать, разместите лицо по центру экрана и постарайтесь не двигаться")
         engine.runAndWait() 
         
         ret, frame_new = video_capture.read()
         rgb_frame_new =frame_new[:, :, ::-1]
         cv2.imwrite("BasePhoto/"+name2, rgb_frame_new)
+        images.append(face_recognition.load_image_file("BasePhoto/" + name2))
+        known_face_encodings.append(face_recognition.face_encodings(images[-1])[0])
+
+
 
     # Hit 'q' on the keyboard to quit!
     if cv2.waitKey(1) & 0xFF == ord('q'):
