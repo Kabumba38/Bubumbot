@@ -105,8 +105,6 @@ while True:
 
     # Display the resulting image
     cv2.imshow('Video', frame)
-    #engine.say("Привет")
-    #engine.runAndWait()
     if name=="Unknown":
         engine.say("О, я вас не знаю, как вас зовут")
         engine.runAndWait()
