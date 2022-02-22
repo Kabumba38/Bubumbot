@@ -3,6 +3,7 @@ import pyttsx3
 import cv2
 import numpy as np
 import pyautogui
+import time
 
 
 
@@ -45,7 +46,7 @@ face_encodings = []
 face_names = []
 process_this_frame = True
 engine = pyttsx3.init()
-
+name="me"
 while True:
     # Grab a single frame of video
     ret, frame = video_capture.read()
@@ -110,6 +111,10 @@ while True:
         engine.say("О, я вас не знаю, как вас зовут")
         engine.runAndWait()
         nameNew = input("Введите имя:")
+        while i < len(known_face_names):
+            if nameNew==known_face_names[i]:
+                seconds=time.time()
+                nameNew=nameNew+str(seconds)
         f = open('base.txt', 'a')
         f.write(nameNew + "\n")
         f.close()
@@ -119,11 +124,8 @@ while True:
         engine.runAndWait() 
         
         ret, frame_new = video_capture.read()
-        rgb_frame =frame[:, :, ::-1]
-        
-        
-        
-        cv2.imwrite(name2, frame)
+        rgb_frame_new =frame_new[:, :, ::-1]
+        cv2.imwrite("BasePhoto/"+name2, rgb_frame_new)
 
     # Hit 'q' on the keyboard to quit!
     if cv2.waitKey(1) & 0xFF == ord('q'):
