@@ -11,16 +11,18 @@ import time
 import sys
 import os
 from threading import Timer
+from fuzzywuzzy import fuzz
 
 timeout = 10
 t = Timer(timeout, os._exit, [1])
 
 nameNew=""
+bot_answ=""
 count_of_unknowns=0
 flag1=False
 # Get a reference to webcam #0 (the default one)
 video_capture = cv2.VideoCapture(0)
-faceCascade = CascadeClassifier('haarcascade_frontalface_default.xml')
+faceCascade = CascadeClassifier('haa rcascade_frontalface_default.xml')
 known_face_names = []
 images = []
 known_face_encodings = []
@@ -40,8 +42,10 @@ face_names = []
 process_this_frame = True
 engine = pyttsx3.init()
 mic = sr.Recognizer()
-name = "me"
+name = "Unknown"
 count_of_unknowns = 0
+#def tree():
+
 def dialog():
     global nameD, count_of_unknowns
     count_of_frames_this_face = 0
@@ -59,25 +63,14 @@ def dialog():
         count_of_unknowns+=1
     if name_i == "Unknown" and count_of_unknowns >= 5:
         print("Я тебя не знаю, как тебя зовут?")
-        engine.say("Я тебя не знаю, как тебя зовут?")
+        issue="Я тебя не знаю, как тебя зовут?"
+        engine.say(issue)
+        count_of_unknowns=0
         engine.runAndWait()
         nameD=name_i
-        with sr.Microphone() as source:
-            message = mic.listen(source)
-            while nameD=="Unknown":
-                try:
-                    nameD = mic.recognize_google(message, language="ru-RU")
-                    print(nameD)
-                except sr.UnknownValueError:
-                    print("Я не расслышал, повторите")
-                    engine.say("Я не расслышал, повторите")
-                    engine.runAndWait()
-                except sr.RequestError as e:
-                    print("Ошибка сервиса; {0}".format(e))
-                    engine.say("Повторите, пожалуйста")
-                    engine.runAndWait()
-                    print("Повторите, пожалуйста")
-
+        while nameD == "Unknown":
+            nameD=speak("Unknown")
+        #log(nameD, issue, nameD)
         if nameD != "Unknown":
             nameNew=nameD
             for i in known_face_names:
@@ -117,15 +110,57 @@ def dialog():
             images.append(face_recognition.load_image_file("BasePhoto/" + nameNew + ".jpg"))
             known_face_encodings.append(face_recognition.face_encodings(images[-1])[0])
             # Добавление в базу выше
-            print("Привет, " + nameD + " приятно познакомиться!")
-            engine.say("Привет, " + nameD + "приятно познакомиться!")
+            print("Привет, " + nameD + ", приятно познакомиться!")
+            engine.say("Привет, " + nameD + ", приятно познакомиться!")
             engine.runAndWait()
-    if not check(name_i):
-        print("Приятно было пообщаться, пока!")
-        engine.say("Приятно было пообщаться, пока!")
+    if count_of_unknowns==0:
+        question = "Как поживаете?"
+        engine.say(question)
+        engine.runAndWait()
+        answ = speak("000")
+        #log(nameD, question, answ, bot_answ)
+        #if not check(name_i):
+        #    print("Приятно было пообщаться, пока!")
+        #    engine.say("Приятно было пообщаться, пока!")
+        #    engine.runAndWait()
+        question = "Есть ли у вас какие-нибудь вопросы?"
+        engine.say(question)
+        engine.runAndWait()
+        answ = speak("001")
+        #log(nameD, question, answ, bot_answ)
+        bot_answ=basix(answ)
+        engine.say(bot_answ)
         engine.runAndWait()
 
+        #Ответ+реакция
+        #Еще кусочек диалога
+        question = "Спросите еще что-нибудь?"
+        engine.say(question)
+        engine.runAndWait()
+        answ = speak("002")
+        bot_answ = basix(answ)
+        engine.say(bot_answ)
+        engine.runAndWait()
+        #log(nameD, question, answ, bot_answ)
+        #Спросить про выставку
+        question = "Как нам наша выставка?"
+        engine.say(question)
+        engine.runAndWait()
+        answ = speak("003")
+        #log(nameD, question, answ, bot_answ)
+        #Предложить посетить стенд телебота
+        question = "Очень настоятельно рекомендую вам посетить стенд телебота, там очень интересно!"
+        engine.say(question)
+        engine.runAndWait()
+        answ = speak("004")
+        #log(nameD, question, answ, bot_answ)
+        question = "Приятно было пообщаться, я поехал, пока!"
+        engine.say(question)
+        engine.runAndWait()
+    #Попрощаться
 
+
+#Проверка присутствия
 def check(TName):
     marker = False
     global process_this_frame
@@ -145,8 +180,6 @@ def check(TName):
             # Find all the faces and face encodings in the current frame of video
             face_locations = face_recognition.face_locations(rgb_small_frame)
             face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
-
-
             for face_encoding in face_encodings:
                 # See if the face is a match for the known face(s)
                 matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
@@ -170,26 +203,86 @@ def check(TName):
             if pop == TName:
                 marker = True
     return marker
+#функция разговора
+def speak(referen):
+    with sr.Microphone() as source:
+        message = mic.listen(source)
+        try:
+            referen = mic.recognize_google(message, language="ru-RU")
+            print(referen)
+        except sr.UnknownValueError:
+            print("Я не расслышал, повторите")
+            engine.say("Я не расслышал, повторите")
+            engine.runAndWait()
+        except sr.RequestError as e:
+            print("Ошибка сервиса; {0}".format(e))
+            engine.say("Повторите, пожалуйста")
+            engine.runAndWait()
+            print("Повторите, пожалуйста")
+    return referen
+#Запись логов
+def log(nameL, mes, ans, bot_ans):
+    seconds = time.time()
+    f = open("Logs/Log:: "+nameL+".txt", 'a')
 
+    f.write(seconds +"// " + mes +"\n"+ "user: " + ans + "bot: " + bot_ans + "\n" + "\n")
+    f.close()
+#функция подсчета строк в базе
+def num():
+    numberQ = 0
+    f = open("QUEST.txt", "r")
+    while True:
+        line = f.readline()
+        if not line:
+            break
+        numberQ += 1
+    f.close()
+    return numberQ
+#Обращение  к базе
+def basix(question):
+    match = 0
+    match_id = ""
+    answ_id = ""
+    fqr = open("QUEST.txt", "r")
+    while True:
+        # считываем строку
+        line = fqr.readline()
+        if not line:
+            break
+        line_id = line.split(';')[0]
+        line_prase = line.split(';')[1]
+        line_prase = line_prase[:-1]
+        # matcher = difflib.SequenceMatcher(None, message_text, line_prase)
+        matcher = fuzz.WRatio(question, line_prase)
 
+        if matcher > match:
+            match = matcher
+            match_id = line_id
+        if question == line_prase:
+            answ_id = line_id
+            break
+    fqr.close()
+    if match > 88:
+        print(match)
+        answ_id = match_id
 
-# Load a sample picture and learn how to recognize it.
-
-# me_image = face_recognition.load_image_file("me.jpg")
-# me_face_encoding = face_recognition.face_encodings(me_image)[0]
-
-# Load a second sample picture and learn how to recognize it.
-# biden_image = face_recognition.load_image_file("unknown.jpg")
-# biden_face_encoding = face_recognition.face_encodings(biden_image)[0]
-# ksusha_image = face_recognition.load_image_file("unknown3.jpg")
-# ksusha_face_encoding = face_recognition.face_encodings(ksusha_image)[0]
-# Create arrays of known face encodings and their names
-#    me_face_encoding,
-#   biden_face_encoding,
-#   ksusha_face_encoding
-# ]
-
-# Initialize some variables
+    line_ans = ""
+    line_id_ans = ""
+    if answ_id != "":
+        far = open("ANSW.txt", "r")
+        while answ_id != line_id_ans:
+            line_answ = far.readline()
+            if not line_answ:
+                break
+            line_id_ans = line_answ.split(';')[0]
+            line_prase_ans = line_answ.split(';')[1]
+            line_prase_ans = line_prase_ans[:-1]
+        far.close()
+        answer = line_prase_ans
+        print(answer)
+    else:
+        answer="На такой вопрос я ответа не знаю, но я научусь!"
+    return answer
 
 while True:
     # Grab a single frame of video
